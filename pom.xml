@@ -59,21 +59,14 @@
         <artifactId>maven-plugin-plugin</artifactId>
         <version>3.3</version>
         <configuration>
-          <goalPrefix>ebean</goalPrefix>
+          <goalPrefix>ebean-codegen</goalPrefix>
           <skipErrorNoDescriptorsFound>true</skipErrorNoDescriptorsFound>
         </configuration>
         <executions>
           <execution>
-            <id>default-descriptor</id>
-            <goals>
-              <goal>descriptor</goal>
-            </goals>
-            <phase>none</phase>
-          </execution>
-          <execution>
             <id>help-descriptor</id>
             <goals>
-              <goal>helpmojo</goal>
+              <goal>help</goal>
             </goals>
             <phase>none</phase>
           </execution>
