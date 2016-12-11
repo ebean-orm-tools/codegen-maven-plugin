@@ -1,7 +1,7 @@
 package main;
 
-import com.avaje.ebean.config.dbplatform.DbPlatformName;
-import com.avaje.ebean.dbmigration.DbMigration;
+import io.ebean.Platform;
+import io.ebean.dbmigration.DbMigration;
 
 import java.io.IOException;
 
@@ -10,7 +10,7 @@ import java.io.IOException;
  */
 public class MainDbMigration {
 
-  public static void main(String[] args) throws IOException, InterruptedException {
+  public static void main(String[] args) throws Exception {
 
     // optionally specify the version and name
     //System.setProperty("ddl.migration.version", "1.2_33");
@@ -20,7 +20,7 @@ public class MainDbMigration {
     //System.setProperty("ddl.migration.pendingDropsFor", "1.1");
 
     DbMigration dbMigration = new DbMigration();
-    dbMigration.setPlatform(DbPlatformName.POSTGRES);
+    dbMigration.setPlatform(Platform.POSTGRES);
     // generate the migration ddl and xml
     dbMigration.generateMigration();
   }

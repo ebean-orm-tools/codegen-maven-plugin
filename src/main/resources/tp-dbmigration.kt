@@ -1,7 +1,7 @@
 package main
 
-import com.avaje.ebean.config.dbplatform.DbPlatformName
-import com.avaje.ebean.dbmigration.DbMigration
+import io.ebean.Platform
+import io.ebean.dbmigration.DbMigration
 import java.io.IOException
 
 
@@ -15,7 +15,7 @@ object MainDbMigration {
     //System.setProperty("ddl.migration.name", "support end dating");
 
     val dbMigration = DbMigration()
-    dbMigration.setPlatform(DbPlatformName.POSTGRES);
-    dbMigration.generateMigration();
+    dbMigration.setPlatform(Platform.POSTGRES)
+    dbMigration.generateMigration()
   }
 }

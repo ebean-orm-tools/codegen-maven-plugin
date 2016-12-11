@@ -1,4 +1,4 @@
-package org.avaje.ebean.codegen;
+package io.ebean.codegen;
 
 import org.apache.maven.plugin.AbstractMojo;
 import org.apache.maven.plugins.annotations.LifecyclePhase;

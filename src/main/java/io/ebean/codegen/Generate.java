@@ -1,13 +1,12 @@
-package org.avaje.ebean.codegen;
+package io.ebean.codegen;
 
 import org.apache.maven.plugin.logging.Log;
-import org.avaje.ebean.typequery.generator.Generator;
-import org.avaje.ebean.typequery.generator.GeneratorConfig;
+import io.ebean.typequery.generator.Generator;
+import io.ebean.typequery.generator.GeneratorConfig;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Properties;
-import java.util.Set;
 
 /**
  * Generates query beans, finders etc based on the Mode.

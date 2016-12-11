@@ -1,4 +1,4 @@
-package org.avaje.ebean.codegen;
+package io.ebean.codegen;
 
 /**
  * Generation mode.
