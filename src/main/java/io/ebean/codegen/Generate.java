@@ -31,6 +31,12 @@ class Generate {
 
       GeneratorConfig config = new GeneratorConfig();
 
+      String lang = System.getProperty("lang");
+      if ("kt".equals(lang) || "kotlin".equals(lang)) {
+        config.setLang("kt");
+      }
+
+
       String classesDirectory = properties.getProperty("classesDirectory");
       if (classesDirectory != null) {
         config.setClassesDirectory(classesDirectory);
