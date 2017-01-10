@@ -4,7 +4,7 @@
 
   <groupId>io.ebean.tools</groupId>
   <artifactId>codegen-maven-plugin</artifactId>
-  <version>3.1-SNAPSHOT</version>
+  <version>3.1</version>
   <packaging>maven-plugin</packaging>
 
   <parent>
@@ -15,7 +15,7 @@
 
   <scm>
     <developerConnection>scm:git:git@github.com:ebean-orm/codegen-maven-plugin.git</developerConnection>
-    <tag>HEAD</tag>
+    <tag>codegen-maven-plugin-3.1</tag>
   </scm>
 
   <dependencies>
