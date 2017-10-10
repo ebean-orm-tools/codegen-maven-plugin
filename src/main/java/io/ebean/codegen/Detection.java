@@ -44,7 +44,7 @@ public class Detection {
 
   private final Set<String> transactionalPackages = new HashSet<>();
 
-  private final Set<String> querybeanPackages = new HashSet<>();
+  private final Set<String> queryBeanPackages = new HashSet<>();
 
   private final List<File> domainDirs = new ArrayList<>();
 
@@ -52,7 +52,7 @@ public class Detection {
 
   private File topPackageDir;
 
-  private final DectionClassPath classpathDection = new DectionClassPath();
+  private final DetectionClassPath classPathDetection = new DetectionClassPath();
 
   private String dbMigrationFile;
 
@@ -62,7 +62,7 @@ public class Detection {
   }
 
   public String toString() {
-    return "mf:" + ebeanManifestFound + " entityPkgs:" + entityPackages + " txnPkgs:" + transactionalPackages + " qbPkgs:" + querybeanPackages;
+    return "mf:" + ebeanManifestFound + " entityPkgs:" + entityPackages + " txnPkgs:" + transactionalPackages + " qbPkgs:" + queryBeanPackages;
   }
 
   public String state() {
@@ -109,12 +109,12 @@ public class Detection {
     return transactionalPackages;
   }
 
-  public Set<String> getQuerybeanPackages() {
-    return querybeanPackages;
+  public Set<String> getQueryBeanPackages() {
+    return queryBeanPackages;
   }
 
-  public DectionClassPath getClasspathDection() {
-    return classpathDection;
+  public DetectionClassPath getClassPathDetection() {
+    return classPathDetection;
   }
 
   public String getTopPackage() {
@@ -147,11 +147,6 @@ public class Detection {
     findDockerRunProperties();
 
     // detect Kotlin or Java
-    // detect top level package ... default for transactional packages
-    // detect top level package ... default for transactional packages
-    if (!ebeanManifestFound) {
-
-    }
 
     findGenerateDbMigration();
     findLogging();
@@ -180,7 +175,7 @@ public class Detection {
    */
   private void findInClassPath() {
     for (String cpEntry : meta.runtimeClasspath) {
-      classpathDection.check(cpEntry);
+      classPathDetection.check(cpEntry);
     }
   }
 
@@ -318,7 +313,7 @@ public class Detection {
     add(entityPackages, attributes.getValue("packages"));
     add(entityPackages, attributes.getValue("entity-packages"));
     add(transactionalPackages, attributes.getValue("transactional-packages"));
-    add(querybeanPackages, attributes.getValue("querybean-packages"));
+    add(queryBeanPackages, attributes.getValue("querybean-packages"));
   }
 
   /**
@@ -339,5 +334,35 @@ public class Detection {
 
   public DetectionMeta getMeta() {
     return meta;
+  }
+
+  public boolean isKotlinInClassPath() {
+    return classPathDetection.isKotlin();
+  }
+
+  public boolean isQueryBeanInClassPath() {
+    return classPathDetection.isEbeanQueryBeans();
+  }
+
+  public boolean isEbeanElasticInClassPath() {
+    return classPathDetection.isEbeanElastic();
+  }
+
+  /**
+   * Set that the ebean.mf file has been set.
+   */
+  public void addedEbeanManifest() {
+    ebeanManifestFound = true;
+  }
+
+  /**
+   * Set that the test-ebean.properties has been set.
+   */
+  public void addedTestProperties() {
+    testEbeanProperties = true;
+  }
+
+  public void addedGenerateMigration(String name) {
+    dbMigrationFile = name;
   }
 }

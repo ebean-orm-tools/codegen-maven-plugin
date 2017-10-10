@@ -3,6 +3,7 @@ package io.ebean.codegen;
 import org.fusesource.jansi.Ansi;
 import org.fusesource.jansi.AnsiConsole;
 
+import java.io.Console;
 import java.io.PrintStream;
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,16 @@ class InteractionHelp {
 
   private final PrintStream out;
 
+//  class Answer {
+//    final String key;
+//    final String value;
+//
+//    Answer(String key, String value) {
+//      this.key = key;
+//      this.value = value;
+//    }
+//  }
+
   InteractionHelp(Detection detection, Actions actions) {
     this.detection = detection;
     this.actions = actions;
@@ -24,49 +35,131 @@ class InteractionHelp {
     this.out = AnsiConsole.out();
   }
 
+  public boolean isContinue() {
+    return actions.continueState();
+  }
+
+  public void questionTransactionalPackage() {
+
+    String topPackage = detection.getTopPackage();
+    String entityPackage = detection.getEntityPackage();
+    if (topPackage != null && entityPackage != null && topPackage.equals(entityPackage)) {
+      int pos = topPackage.lastIndexOf('.');
+      if (pos > 0) {
+        topPackage = topPackage.substring(0, pos);
+      }
+    }
+
+    QuestionOptions options = new QuestionOptions();
+    if (topPackage != null) {
+      options.add("0", topPackage);
+    }
+    options.add("1", "Other");
+    options.add("2", "None - I don't want to use @Transactional");
+
+    question("Select the top level package @Transactional is used");
+    outOps(options);
+    String answer = askKey("Select an option:", options);
+    String fullAnswer = options.selected(answer);
+    System.out.println("---- answer key:"+answer+" pkg:"+fullAnswer);
+
+    if (isContinue()) {
+      if ("1".equalsIgnoreCase(answer)) {
+        q_enterTransactionalPackage();
+      } else if ("2".equalsIgnoreCase(answer)) {
+        actions.setManifestTransactionalPackage("none");
+      } else {
+        actions.setManifestTransactionalPackage(fullAnswer);
+      }
+    }
+  }
+
+  public void questionQueryBeanPackage() {
+
+    actions.setManifestQueryBeanPackage("none");
+
+    if (!detection.isQueryBeanInClassPath()) {
+      acknowledge("  ebean-querybean does not appear to be in the classpath");
+      String yesNo = askYesNo("  Do you plan to use Query Beans");
+      if (!yesNo.equalsIgnoreCase("Yes")) {
+        return;
+      }
+    }
+    if (isContinue()) {
+      if (detection.isKotlinInClassPath()) {
+        acknowledge("  ... for kotlin query beans using the entity package of " + actions.getManifestEntityPackage());
+        actions.setManifestQueryBeanPackage(actions.getManifestEntityPackage());
+      } else {
+        acknowledge("  ... for java query beans using the top level package of " + actions.getManifestTransactionalPackage());
+        actions.setManifestQueryBeanPackage(actions.getManifestTransactionalPackage());
+      }
+    }
+  }
+
   void questionEntityBeanPackage() {
 
     List<String> list = detection.getDetectedPackages();
     if (list.isEmpty()) {
-      String answer = ask("Enter a package that will contain the entity beans: ");
-      question("ta: " + answer);
-      actions.setManifestEntityPackage(answer);
+      q_enterEntityPackage();
 
     } else {
       QuestionOptions options = new QuestionOptions();
+      options.add("0", "Other");
       options.addAll(list);
-      options.add("O", "Other");
 
       question("Select a package that will contain the entity beans");
       String answer = outOptions(options);
+
+      System.out.println("---- answer: "+answer);
+      if ("Other".equalsIgnoreCase(answer)) {
+        q_enterEntityPackage();
+      }
       actions.setManifestEntityPackage(answer);
     }
+  }
 
+  private void q_enterEntityPackage() {
+    String answer = ask("Enter a package that will contain the entity beans: ");
+    actions.setManifestEntityPackage(answer);
+  }
 
+  private void q_enterTransactionalPackage() {
+    String answer = ask("Enter the top level package that will contain @Transactional classes : ");
+    actions.setManifestTransactionalPackage(answer);
   }
 
   String outOptions(QuestionOptions options) {
 
-    Set<Map.Entry<String, String>> entries = options.entries();
-    for (Map.Entry<String, String> entry : entries) {
-      PrintStream out = AnsiConsole.out();
-      out.print(Ansi.ansi().bold().fgBrightBlue().a("  "+entry.getKey()).reset());
-      out.println(Ansi.ansi().fgBlue().a(" - "+entry.getValue()).reset());
-    }
+    outOps(options);
     String answer = ask("select one of the options above");
     return options.selected(answer);
   }
 
-  String ask(String ask) {
-//    PrintStream out = AnsiConsole.out();
-    out.println(Ansi.ansi().bold().fgBrightBlue().a(ask).reset());
+  void outOps(QuestionOptions options) {
+    Set<Map.Entry<String, String>> entries = options.entries();
+    for (Map.Entry<String, String> entry : entries) {
+      PrintStream out = AnsiConsole.out();
+      out.print(Ansi.ansi().bold().fgBrightBlue().a("  " + entry.getKey()).reset());
+      out.println(Ansi.ansi().fgBlue().a(" - " + entry.getValue()).reset());
+    }
+  }
 
-    return System.console().readLine();
+  String ask(String ask) {
+    out.println(Ansi.ansi().bold().fgBrightBlue().a(ask).reset());
+    return actions.readLine();
+  }
+
+  String askKey(String ask, QuestionOptions options) {
+    return ask(ask, options, true);
   }
 
   String ask(String ask, QuestionOptions options) {
+    return ask(ask, options, false);
+  }
 
-    out.print(Ansi.ansi().bold().fgBrightBlue().a("  "+ask).reset());
+  String ask(String ask, QuestionOptions options, boolean keyMode) {
+
+    out.print(Ansi.ansi().bold().fgBrightBlue().a("  " + ask).reset());
 
     if (options != null) {
       outOptionKeys(options);
@@ -75,11 +168,18 @@ class InteractionHelp {
     plain(" > ");
     AnsiConsole.out().flush();
 
-    String answer = System.console().readLine();
-    if (options != null) {
+    Console console = System.console();
+    if (console == null) {
+      plainln("... no Console - skipping");
+      return null;
+    }
+
+    String answer = actions.readLine();
+
+    if (options != null && !keyMode) {
       answer = options.selected(answer);
     }
-    return answer;
+    return answer;//new Answer(line, description);
   }
 
   private void outOptionKeys(QuestionOptions options) {
@@ -103,13 +203,12 @@ class InteractionHelp {
 
   void outputAllGood(String key, String description) {
 
-
     int gap = 40 - key.length();
 
     out.print(Ansi.ansi().bold().fgGreen().a("  PASS").reset());
     out.print(Ansi.ansi().bold().a(" - ").reset());
     out.print(Ansi.ansi().bold().fgBrightBlue().a(key).reset());
-    out.println(Ansi.ansi().a(padding(gap).toString()+"  - "+description).reset());
+    out.println(Ansi.ansi().a(padding(gap).toString() + "  - " + description).reset());
   }
 
   private String padding(int gap) {
@@ -122,29 +221,29 @@ class InteractionHelp {
     return sbGap.toString();
   }
 
-  void outputManifest() {
-
-    String pad = "          ";
-
-    int padOut = 40;
-    plain(pad);
-    blueBold(detection.getEntityPackages().toString(), padOut);
-    plain("  ... enhancement for entity beans\n");
-
-    plain(pad);
-    blueBold(detection.getTransactionalPackages().toString(), padOut);
-    plain("  ... enhancement for @Transactional\n");
-
-    plain(pad);
-    blueBold(detection.getQuerybeanPackages().toString(), padOut);
-    plain("  ... query bean caller enhancement\n");
-  }
+//  void outputManifest() {
+//
+//    String pad = "          ";
+//
+//    int padOut = 40;
+//    plain(pad);
+//    blueBold(detection.getEntityPackages().toString(), padOut);
+//    plain("  ... enhancement for entity beans\n");
+//
+//    plain(pad);
+//    blueBold(detection.getTransactionalPackages().toString(), padOut);
+//    plain("  ... enhancement for @Transactional\n");
+//
+//    plain(pad);
+//    blueBold(detection.getQueryBeanPackages().toString(), padOut);
+//    plain("  ... query bean caller enhancement\n");
+//  }
 
   void plain(String content) {
     out.print(Ansi.ansi().a(content).reset());
   }
 
-  void plainLn(String content) {
+  void plainln(String content) {
     out.println(Ansi.ansi().a(content).reset());
   }
 
@@ -184,19 +283,12 @@ class InteractionHelp {
     AnsiConsole.out().println(Ansi.ansi().fgBrightMagenta().a("---------------------------------------------").reset());
   }
 
-  public void questionTransactionalPackage() {
-
-  }
-
-  public void questionQueryBeanPackage() {
-
-  }
 
   void outputAllGoodBits() {
 
     if (detection.isEbeanManifestFound()) {
       outputAllGood("ebean.mf", "controlling packages that are enhanced");
-      outputManifest();
+      //outputManifest();
     }
     if (detection.isTestEbeanProperties()) {
       outputAllGood("test-ebean.properties", "configuration when running tests");
@@ -208,19 +300,22 @@ class InteractionHelp {
       outputAllGood(detection.getDbMigrationFile(), "for generation of DB migrations");
     }
 
-    plainLn(" ");
-    plainLn(" ");
+    plainln(" ");
+    plainln(" ");
   }
 
   void desc(String content) {
-    plainLn("  "+content);
+    plainln("  " + content);
   }
 
-  public String askYesNo(String content) {
+  String askYesNo(String content) {
     QuestionOptions yn = new QuestionOptions();
     yn.add("Y", "Yes");
     yn.add("N", "No");
-    return ask(content, yn);
+    return actions.checkState(ask(content, yn));
   }
 
+  public Actions actions() {
+    return actions;
+  }
 }

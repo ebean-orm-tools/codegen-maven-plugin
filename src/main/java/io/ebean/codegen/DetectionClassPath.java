@@ -5,7 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Set;
 
-class DectionClassPath {
+class DetectionClassPath {
 
   private final Map<String,String> dbMap = new LinkedHashMap<>();
 
@@ -17,16 +17,18 @@ class DectionClassPath {
 
   private boolean ebeanQueryBeans;
 
-  private boolean querybeanGenerator;
+  private boolean ebeanElastic;
 
-  DectionClassPath() {
+  private boolean queryBeanGenerator;
+
+  DetectionClassPath() {
     dbMap.put("postgres", "postgres");
     dbMap.put("oracle", "oracle");
     dbMap.put("mysql", "mysql");
   }
 
   public String toString() {
-    return "dbs:"+targetDatabases+" kotlin:"+kotlin+" dockerRun:"+ebeanDockerRun+" qb:"+ebeanQueryBeans+" qbg:"+querybeanGenerator;
+    return "dbs:" + targetDatabases + " kotlin:" + kotlin + " dockerRun:" + ebeanDockerRun + " qb:" + ebeanQueryBeans + " qbg:" + queryBeanGenerator;
   }
 
   public Set<String> getTargetDatabases() {
@@ -37,6 +39,10 @@ class DectionClassPath {
     return kotlin;
   }
 
+  public boolean isEbeanElastic() {
+    return ebeanElastic;
+  }
+
   public boolean isEbeanDockerRun() {
     return ebeanDockerRun;
   }
@@ -45,14 +51,14 @@ class DectionClassPath {
     return ebeanQueryBeans;
   }
 
-  public boolean isQuerybeanGenerator() {
-    return querybeanGenerator;
+  public boolean isQueryBeanGenerator() {
+    return queryBeanGenerator;
   }
 
   public void check(String entry) {
 
     if (!kotlin) {
-      kotlin = entry.contains("org.jetbrains.kotlin");
+      kotlin = entry.contains("kotlin-stdlib");
     }
     if (!ebeanDockerRun) {
       ebeanDockerRun = entry.contains("ebean-docker-run");
@@ -60,16 +66,17 @@ class DectionClassPath {
     if (!ebeanQueryBeans) {
       ebeanQueryBeans = entry.contains("ebean-querybean");
     }
-    if (!querybeanGenerator) {
-      querybeanGenerator = entry.contains("querybean-generator");
+    if (!queryBeanGenerator) {
+      queryBeanGenerator = entry.contains("querybean-generator");
+    }
+    if (!ebeanElastic) {
+      ebeanElastic = entry.contains("ebean-elastic");
     }
 
-    Set<Map.Entry<String, String>> dbs = dbMap.entrySet();
-    for (Map.Entry<String, String> db : dbs) {
+    for (Map.Entry<String, String> db : dbMap.entrySet()) {
       if (entry.contains(db.getValue())) {
         targetDatabases.add(db.getKey());
       }
     }
-
   }
 }

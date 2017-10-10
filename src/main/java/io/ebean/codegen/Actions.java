@@ -8,16 +8,27 @@ public class Actions {
 
   private boolean addTestProperties;
 
-  public void setAddEbeanManifest(boolean generateEbeanManifest) {
-    this.addEbeanManifest = generateEbeanManifest;
+  private boolean quitState;
+  private String manifestTransactionalPackage;
+  private String manifestQueryBeanPackage;
+
+  public String checkState(String answer) {
+    if ("Q".equalsIgnoreCase(answer)) {
+      quitState = true;
+    }
+    return answer;
+  }
+
+  public void setAddEbeanManifest(boolean addEbeanManifest) {
+    this.addEbeanManifest = addEbeanManifest;
   }
 
   public boolean isAddEbeanManifest() {
     return addEbeanManifest;
   }
 
-  public void setManifestEntityPackage(String manifestEntityPackage) {
-    this.manifestEntityPackage = manifestEntityPackage;
+  public void setManifestEntityPackage(String answer) {
+    this.manifestEntityPackage = checkState(answer);
   }
 
   public String getManifestEntityPackage() {
@@ -30,5 +41,31 @@ public class Actions {
 
   public boolean isAddTestProperties() {
     return addTestProperties;
+  }
+
+  public boolean continueState() {
+    return !quitState;
+  }
+
+  public String readLine() {
+    String answer = System.console().readLine();
+    answer = answer.trim();
+    return checkState(answer);
+  }
+
+  public void setManifestTransactionalPackage(String manifestTransactionalPackage) {
+    this.manifestTransactionalPackage = manifestTransactionalPackage;
+  }
+
+  public String getManifestTransactionalPackage() {
+    return manifestTransactionalPackage;
+  }
+
+  public void setManifestQueryBeanPackage(String manifestQueryBeanPackage) {
+    this.manifestQueryBeanPackage = manifestQueryBeanPackage;
+  }
+
+  public String getManifestQueryBeanPackage() {
+    return manifestQueryBeanPackage;
   }
 }

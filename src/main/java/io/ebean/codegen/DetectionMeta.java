@@ -15,6 +15,8 @@ public class DetectionMeta {
 
   List<String> compileSourceRoots;
   List<String> testSourceRoots;
+  private String outputDirectory;
+  private String testOutputDirectory;
 
   public List<String> getTestSourceRoots() {
     return testSourceRoots;
@@ -42,5 +44,21 @@ public class DetectionMeta {
 
   public void addRuntimeClassPath(List<String> classpathElements) {
     runtimeClasspath.addAll(classpathElements);
+  }
+
+  public void setOutputDirectory(String outputDirectory) {
+    this.outputDirectory = outputDirectory;
+  }
+
+  public String getOutputDirectory() {
+    return outputDirectory;
+  }
+
+  public void setTestOutputDirectory(String testOutputDirectory) {
+    this.testOutputDirectory = testOutputDirectory;
+  }
+
+  public String getTestOutputDirectory() {
+    return testOutputDirectory;
   }
 }

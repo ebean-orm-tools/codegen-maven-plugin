@@ -9,12 +9,20 @@ public class QuestionOptions {
 
   private Map<String,String> opts = new LinkedHashMap<>();
 
+  private int keyStart;
+
   public void add(String key, String text) {
     opts.put(key.toUpperCase(), text);
+
+    try {
+      keyStart = Math.max(keyStart, Integer.parseInt(key));
+    } catch (NumberFormatException e) {
+      // ignore
+    }
   }
 
   public void addAll(List<String> list) {
-    for (int i = 0; i < list.size(); i++) {
+    for (int i = keyStart; i < list.size(); i++) {
       add(""+(i + 1), list.get(i));
     }
   }

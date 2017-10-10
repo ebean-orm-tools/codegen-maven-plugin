@@ -64,7 +64,7 @@
     <dependency>
       <groupId>io.ebean.tools</groupId>
       <artifactId>finder-generator</artifactId>
-      <version>4.1.1</version>
+      <version>4.1.2-SNAPSHOT</version>
     </dependency>
 
     <dependency>

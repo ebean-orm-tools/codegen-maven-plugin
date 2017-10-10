@@ -2,10 +2,7 @@ package io.ebean.codegen;
 
 import org.fusesource.jansi.AnsiConsole;
 
-import java.io.File;
-import java.util.List;
-
-public class Interaction {
+class Interaction {
 
   private Actions actions = new Actions();
 
@@ -13,52 +10,121 @@ public class Interaction {
 
   private final InteractionHelp help;
 
-  public Interaction(Detection detection) {
+  Interaction(Detection detection) {
     this.detection = detection;
     this.help = new InteractionHelp(detection, actions);
   }
 
-  public void run(DoAction doAction) {
+
+  void run() {
     try {
       help.outputHeading();
       help.outputAllGoodBits();
 
-      if (!detection.isEbeanManifestFound()) {
-        actions.setAddEbeanManifest(true);
-        help.questionEntityBeanPackage();
-        help.questionTransactionalPackage();
-        help.questionQueryBeanPackage();
-      }
-
-      if (!detection.isTestEbeanProperties()) {
-        actions.setAddTestProperties(true);
-      }
-
-      if (!detection.isTestEbeanProperties()) {
-
-          help.desc("I'd like to add test-ebean.properties, this can be used to");
-          help.desc("configure Ebean when running tests (which DB to use etc)");
-          String ans = help.askYesNo("Should I add test-ebean.properties?");
-          if (ans.equalsIgnoreCase("Yes")) {
-            List<String> testResourceDirs = detection.getMeta().testResourceDirs;
-            if (!testResourceDirs.isEmpty()) {
-
-              File testRes = new File(testResourceDirs.get(0));
-              if (!testRes.exists() && testRes.isDirectory()) {
-                throw new IllegalStateException("Expected test resource directory at "+testRes.getAbsolutePath());
-              }
-              actions.setAddTestProperties(true);
-              File file = doAction.copyTestProperties(testRes);
-              if (file != null) {
-                help.acknowledge("  ... I have added " + file.getAbsolutePath());
-              }
-            }
-
-          }
+      boolean quit = false;
+      while (!quit) {
+        QuestionOptions options = createOptions();
+        help.question("Commands:");
+        help.outOps(options);
+        String answer = help.askKey("Select an command:", options);
+        quit = isQuit(answer);
+        if (quit) {
+          help.acknowledge("  done.");
+          help.acknowledge(" ");
+          help.acknowledge(" ");
+        } else {
+          executeCommand(answer);
+        }
       }
 
     } finally {
       AnsiConsole.systemUninstall();
     }
+  }
+
+  private void executeCommand(String answer) {
+    switch (answer) {
+      case "M":
+        executeManifest();
+        break;
+      case "P":
+        executeAddTestProperties();
+        break;
+      case "L":
+        executeAddTestLogging();
+        break;
+      case "G":
+        executeAddDbMigration();
+        break;
+      case "D":
+        executeAddDockerRun();
+        break;
+      case "F":
+        executeGenerateFinders();
+        break;
+      case "T":
+        executeGenerateQueryBeans();
+        break;
+    }
+  }
+
+  private boolean isQuit(String answer) {
+    answer = answer.trim();
+    return "Q".equalsIgnoreCase(answer) || "X".equalsIgnoreCase(answer);
+  }
+
+  private QuestionOptions createOptions() {
+    QuestionOptions options = new QuestionOptions();
+    if (!detection.isEbeanManifestFound()) {
+      options.add("M", "Manifest - add ebean.mf to control enhancement (recommended)");
+    }
+    if (!detection.isTestEbeanProperties()) {
+      options.add("P", "Test properties - Add test-ebean.properties to configure Ebean when running tests (recommended)");
+    }
+    if (!detection.isTestLoggingEntry()) {
+      options.add("L", "Logging - Add test logging entry to log SQL when running tests (recommended)");
+    }
+    if (!detection.isDbMigration()) {
+      options.add("G", "Generate migrations - Add GenerateDbMigration for generating DB migration scripts (recommended)");
+    }
+    if (!detection.isDockerRunProperties()) {
+      options.add("D", "Docker - Add support for running tests against Docker containers (Postgres, ElasticSearch etc)");
+    }
+
+    options.add("F", "Finders - generate finders");
+    options.add("T", "Type safe query beans - manually generate them (rather than via APT/KAPT)");
+    options.add("Q", "Quit");
+
+    return options;
+  }
+
+
+  private void executeAddDockerRun() {
+    help.acknowledge("  docker run");
+  }
+
+  private void executeAddDbMigration() {
+    new DoAddGenerateMigration(detection, help).run();
+  }
+
+  private void executeAddTestLogging() {
+    help.acknowledge("  executeAddTestLogging");
+  }
+
+  private void executeGenerateFinders() {
+    new DoGenerate(detection, help).generateFinders();
+  }
+
+  private void executeGenerateQueryBeans() {
+    new DoGenerate(detection, help).generateQueryBeans();
+  }
+
+  private void executeManifest() {
+    new DoAddManifest(detection, help).run();
+
+  }
+
+  private void executeAddTestProperties() {
+    new DoAddTestProperties(detection, help).run();
   }
 }
