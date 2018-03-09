@@ -58,7 +58,7 @@
     <dependency>
       <groupId>io.ebean.tools</groupId>
       <artifactId>finder-generator</artifactId>
-      <version>4.2.1</version>
+      <version>4.2.2</version>
     </dependency>
 
     <dependency>
